@@ -1,0 +1,5 @@
+*.o
+main.bin
+main.elf
+main.lst
+main.map

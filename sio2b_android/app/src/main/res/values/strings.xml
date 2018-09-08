@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">SIO2B</string>
+    <string name="action_settings">Settings</string>
+    <string name="button_d1_text">D1:</string>
+    <string name="button_d2_text">D2:</string>
+    <string name="button_d3_text">D3:</string>
+    <string name="button_d4_text">D4:</string>
+    <string name="action_scan">Scan</string>
+    <string name="action_bps">baud</string>
+
+    <string-array name="sio_speed_list">
+        <item>HS Index=40 (18.9 kbps)</item>
+        <item>HS Index=16 (38.5 kbps)</item>
+        <item>HS Index=10 (52.2 kbps)</item>
+        <item>HS Index=9  (55.4 kbps)</item>
+        <item>HS Index=8  (59.1 kbps)</item>
+        <item>HS Index=6  (68.2 kbps)</item>
+        <item>HS Index=4  (80.6 kbps)</item>
+        <item>HS Index=2  (98.5 kbps)</item>
+        <item>HS Index=1 (110.8 kbps)</item>
+    </string-array>
+
+</resources>

@@ -1,4 +1,4 @@
-#include <stm32f0xx.h>
+#include <stm32f030x8.h>
 
 #define SPI_DEBUG		0
 #define STOP_BIT_DEBUG		0
@@ -227,19 +227,20 @@ int sio_uart_rx()
 
 void setup_clock()
 {
-	// SYS_FREQ > 24 MHz : 1 wait state
-	FLASH->ACR |= 1;
-
 	// Turn on HSE
 	RCC->CR |= RCC_CR_HSEON;
 	while ((RCC->CR & RCC_CR_HSERDY) == 0);
 
 	// Setup PLL : input x 6
-	RCC->CFGR |= RCC_CFGR_PLLMULL6 | RCC_CFGR_PLLSRC_PREDIV1;
+	RCC->CFGR |= RCC_CFGR_PLLMUL6 | RCC_CFGR_PLLSRC_HSE_PREDIV;
 
 	// Turn on PLL
 	RCC->CR |= RCC_CR_PLLON;
 	while ((RCC->CR & RCC_CR_PLLRDY) == 0);
+
+	// SYS_FREQ > 24 MHz : 1 wait state
+	FLASH->ACR |= FLASH_ACR_LATENCY;
+	while ((FLASH->ACR & FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY);
 
 	// Switch system clock to PLL
 	RCC->CFGR |= RCC_CFGR_SW_PLL;

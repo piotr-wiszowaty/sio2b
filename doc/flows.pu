@@ -1,0 +1,53 @@
+@startuml
+
+hide footbox
+title Flows
+
+participant Atari as atari
+participant SIO2B as sio2b
+participant PC as pc
+
+== Read ==
+
+atari -> sio2b : ddevic, dcmnd, daux1, daux2, cksum
+sio2b -> pc    : ddevic, dcmnd, daux1, daux2, cksum
+atari <- sio2b : 'A'
+sio2b <- pc    : response_length : 2
+group SEND_COMMAND_DATA_RESPONSE
+  sio2b <- pc    : ['C', data, cksum] : response_length
+  atari <- sio2b : ['C', data, cksum] : response_length
+end
+
+== Write ==
+
+atari -> sio2b : ddevic, dcmnd, daux1, daux2, cksum
+sio2b -> pc    : ddevic, dcmnd, daux1, daux2, cksum
+atari <- sio2b : 'A'
+sio2b <- pc    : response_length : 2
+sio2b <- pc    : 'c', sector_size : 2
+atari -> sio2b : data : sector_size, cksum
+atari <- sio2b : 'A'
+sio2b -> pc    : 'c', data : sector_size, cksum
+sio2b <- pc    : response_length : 2
+group SEND_COMMAND_DATA_RESPONSE
+  sio2b <- pc    : 'C'
+  atari <- sio2b : 'C'
+end
+
+== Write & Read ==
+
+atari -> sio2b : ddevic, dcmnd, daux1, daux2, cksum
+sio2b -> pc    : ddevic, dcmnd, daux1, daux2, cksum
+atari <- sio2b : 'A'
+sio2b <- pc    : response_length : 2
+sio2b <- pc    : 'c', sector_size : 2
+atari -> sio2b : data : sector_size, cksum
+atari <- sio2b : 'A'
+sio2b -> pc    : 'c', data : sector_size, cksum
+sio2b <- pc    : response_length : 2
+group SEND_COMMAND_DATA_RESPONSE
+  sio2b <- pc    : 'C', data : sector_size, cksum
+  atari <- sio2b : 'C', data : sector_size, cksum
+end
+
+@enduml

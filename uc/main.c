@@ -70,13 +70,13 @@ typedef enum {
 	RECEIVE_TICK_RESPONSE = 0x06,
 	RECEIVE_WRITE_RESPONSE = 0x07,
 	WAIT_COMMAND_ACK = 0x08,
-	SEND_COMMAND_RESPONSE = 0x09,
-	RECEIVE_DATA = 0x0a,
+	SEND_COMMAND_DATA_RESPONSE = 0x09,
+	RECEIVE_DATA_TO_WRITE = 0x0a,
 	SEND_ERROR = 0x0b,
-	WAIT_DATA_RESPONSE = 0x0c,
-	GET_SETUP_DATA = 0x0d,
-	ACK_SETUP_DATA = 0x0e,
-	SEND_SETUP_STATUS = 0x0f,
+	GET_SETUP_DATA = 0x0c,
+	ACK_SETUP_DATA = 0x0d,
+	SEND_SETUP_STATUS = 0x0e,
+	RECEIVE_COMMAND_RESPONSE_LENGTH2 = 0x0f,
 } State;
 
 typedef enum {
@@ -584,12 +584,12 @@ int main()
 				if ((c = bt_uart_rx()) != -1) {
 					buffer[rx_i++] = c;
 				}
-				if (rx_i > 4) {
+				if (rx_i > 4) {					/* buffer at this point: response_length:2, 'c', sector_size:2 */
 					if (buffer[2] == 'c') {
 						sector_size = buffer[3] | (buffer[4] << 8);
 						counter2 = 10000;
 						rx_i = 1;
-						set_state(&state, RECEIVE_DATA, 2);
+						set_state(&state, RECEIVE_DATA_TO_WRITE, 2);
 					} else {
 						counter1 = 2700;
 						set_state(&state, SEND_ERROR, 3);
@@ -606,12 +606,12 @@ int main()
 						// Do not send data when next command is being sent
 						set_state(&state, IDLE, 1);
 					} else {
-						set_state(&state, SEND_COMMAND_RESPONSE, 2);
+						set_state(&state, SEND_COMMAND_DATA_RESPONSE, 2);
 					}
 				}
 				break;
 
-			case SEND_COMMAND_RESPONSE:
+			case SEND_COMMAND_DATA_RESPONSE:
 				if ((c = bt_uart_rx()) != -1) {
 					sio_uart_tx(c);
 					if (--response_length == 0) {
@@ -627,7 +627,7 @@ int main()
 				}
 				break;
 
-			case RECEIVE_DATA:
+			case RECEIVE_DATA_TO_WRITE:
 				if ((c = sio_uart_rx()) > -1) {
 					buffer[rx_i++] = c;
 				} else if (counter2 == 0) {
@@ -641,7 +641,7 @@ int main()
 						rx_i = 0;
 						length = encode_slip(buffer, 1 + sector_size, sizeof(buffer));
 						bt_uart_tx(buffer + sizeof(buffer) - length, length);
-						set_state(&state, WAIT_DATA_RESPONSE, 2);
+						set_state(&state, RECEIVE_COMMAND_RESPONSE_LENGTH2, 1);
 					} else {
 						sio_uart_tx('N');
 						buffer[0] = 'e';
@@ -651,15 +651,17 @@ int main()
 				}
 				break;
 
-			case WAIT_DATA_RESPONSE:
+			case RECEIVE_COMMAND_RESPONSE_LENGTH2:
 				if ((c = bt_uart_rx()) != -1) {
 					buffer[rx_i++] = c;
 				}
-				if (rx_i > INPUT_HEADER_LENGTH) {
-					sio_uart_tx(buffer[INPUT_HEADER_LENGTH]);
-					set_state(&state, IDLE, 1);
+				if (rx_i > 1) {
+					response_length = buffer[0] | (buffer[1] << 8);
+					counter2 = 10000;
+					set_state(&state, SEND_COMMAND_DATA_RESPONSE, 1);
 				} else if (counter2 == 0) {
-					set_state(&state, SEND_ERROR, 2);
+					counter1 = 2700;
+					set_state(&state, SEND_ERROR, 5);
 				}
 				break;
 

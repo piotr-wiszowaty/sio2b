@@ -420,6 +420,17 @@ public class SIO2B implements ActionListener, IO, GUIManager, Logger {
     }
 
     @Override
+    public void w(String message, Exception exception) {
+        log("WARN", message);
+        exception.printStackTrace();
+    }
+
+    @Override
+    public void w(String message) {
+        log("WARN", message);
+    }
+
+    @Override
     public void d(String message) {
         if (debugEnabled) {
             log("DEBUG", message);

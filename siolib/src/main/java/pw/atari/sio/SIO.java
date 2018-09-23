@@ -2,18 +2,26 @@ package pw.atari.sio;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class SIO implements Runnable {
     public static final int MAX_DISKS = 4;
 
     private static final int DEVICE_TIME = 0x64;
+    private static final int DEVICE_NETCHAN_LO = 0x68;
+    private static final int DEVICE_NETCHAN_HI = 0x6f;
 
     private static final int CMD_SEND_HIGH_SPEED_INDEX = 0x3f;
     private static final int CMD_PUT_SECTOR = 0x50;
     private static final int CMD_READ_SECTOR = 0x52;
     private static final int CMD_READ_STATUS = 0x53;
     private static final int CMD_WRITE_SECTOR = 0x57;
+    private static final int CMD_NETCHAN_OPEN = 0xf3;
+    private static final int CMD_NETCHAN_CLOSE = 0xf4;
+    private static final int CMD_NETCHAN_STATUS = 0xf5;
+    private static final int CMD_NETCHAN_READ = 0xf6;
+    private static final int CMD_NETCHAN_WRITE = 0xf7;
     private static final int CMD_GET_CHUNK = 0xf8;
     private static final int CMD_GET_NEXT_CHUNK = 0xf9;
     private static final int CMD_TICK = 0xfc;
@@ -23,6 +31,8 @@ public class SIO implements Runnable {
     private static final int ESC_END = 0xdc;
     private static final int ESC_ESC = 0xdd;
 
+    private static final long SIO_READ_TIMEOUT = 2000l;
+
     private boolean ioRun;
     private Thread ioThread;
     private IO io;
@@ -31,6 +41,7 @@ public class SIO implements Runnable {
     private DiskImage[] diskImages = new DiskImage[MAX_DISKS];
     private int highSpeedIndex = 40;
     private int ubrr = 2544;
+    private NetChannel[] netChannels = new NetChannel[DEVICE_NETCHAN_HI - DEVICE_NETCHAN_LO + 1];
 
     private boolean slipEscape = false;
 
@@ -38,6 +49,10 @@ public class SIO implements Runnable {
         this.io = io;
         this.logger = logger;
         this.gui = gui;
+
+        for (int i = 0; i < netChannels.length; i++) {
+            netChannels[i] = new DummyNetChannel();
+        }
     }
 
     public void start() {
@@ -213,6 +228,7 @@ public class SIO implements Runnable {
         int dcmnd;
         int daux1;
         int daux2;
+        long t0;
 
         while (ioRun) {
             try {
@@ -227,9 +243,13 @@ public class SIO implements Runnable {
 
                 // Receive command (4 bytes)
                 i = 0;
+                t0 = System.currentTimeMillis();
                 while (i < 4) {
                     length = slipRead(buffer, i, 4 - i);
                     i += length;
+                    if (System.currentTimeMillis() - t0 > SIO_READ_TIMEOUT) {
+                        continue;
+                    }
                 }
                 ddevic = buffer[0] & 0xff;
                 dcmnd = buffer[1] & 0xff;
@@ -290,6 +310,48 @@ public class SIO implements Runnable {
                         }
                         break;
 
+                    case CMD_NETCHAN_STATUS:
+                        if (ddevic >= DEVICE_NETCHAN_LO && ddevic <= DEVICE_NETCHAN_HI) {
+                            try {
+                                byte[] buf = Arrays.copyOf(netChannels[ddevic - DEVICE_NETCHAN_LO].status().getBytes(), 128);
+                                sendData(buf);
+                            } catch (Exception e) {
+                                logger.e(e.getMessage(), e);
+                                sendErrorResponse();
+                            }
+                        } else {
+                            sendErrorResponse();
+                        }
+                        break;
+
+                    case CMD_NETCHAN_READ:
+                        if (ddevic >= DEVICE_NETCHAN_LO && ddevic <= DEVICE_NETCHAN_HI) {
+                            byte[] buf = new byte[(daux2 << 8) + daux1];
+                            logger.d("reading " + (buf.length - 2));
+                            int n = netChannels[ddevic - DEVICE_NETCHAN_LO].read(buf, 2);
+                            logger.d("read " + n);
+                            buf[0] = (byte) (n & 0xff);
+                            buf[1] = (byte) ((n >> 8) & 0xff);
+                            if (n >= 0) {
+                                sendData(buf);
+                            } else {
+                                sendErrorResponse();
+                            }
+                        } else {
+                            sendErrorResponse();
+                        }
+                        break;
+
+                    case CMD_NETCHAN_CLOSE:
+                        if (ddevic >= DEVICE_NETCHAN_LO && ddevic <= DEVICE_NETCHAN_HI) {
+                            netChannels[ddevic - DEVICE_NETCHAN_LO].close();
+                            buffer[0] = 'C';
+                            write(buffer, 0, 1);
+                        } else {
+                            sendErrorResponse();
+                        }
+                        break;
+
                     case CMD_WRITE_SECTOR:
                     case CMD_PUT_SECTOR:
                         if (ddevic >= 0x31 && ddevic < 0x31+diskImages.length && (di = diskImages[ddevic - 0x31]) != null) {
@@ -302,9 +364,15 @@ public class SIO implements Runnable {
 
                             int count = 0;
                             boolean error = false;
+                            t0 = System.currentTimeMillis();
                             while (count < size + 1) {
                                 count += slipRead(buffer, count, size + 1 - count);
                                 if (buffer[0] != 'c') {
+                                    error = true;
+                                    break;
+                                }
+                                if (System.currentTimeMillis() - t0 > SIO_READ_TIMEOUT) {
+                                    logger.w("read timeout (1)");
                                     error = true;
                                     break;
                                 }
@@ -317,6 +385,104 @@ public class SIO implements Runnable {
                                 buffer[0] = 'C';
                             } catch (Exception e) {
                                 logger.e(e.getMessage(), e);
+                                buffer[0] = 'E';
+                            }
+                            write(buffer, 0, 1);
+                        } else {
+                            buffer[0] = 'e';
+                            write(buffer, 0, 1);
+                        }
+                        break;
+
+                    case CMD_NETCHAN_OPEN:
+                        if (ddevic >= DEVICE_NETCHAN_LO && ddevic <= DEVICE_NETCHAN_HI) {
+                            int size = daux1;
+
+                            buffer[0] = 'c';
+                            buffer[1] = (byte) size;
+                            buffer[2] = 0;
+                            write(buffer, 0, 3);
+
+                            int count = 0;
+                            boolean error = false;
+                            t0 = System.currentTimeMillis();
+                            while (count < size + 1) {
+                                count += slipRead(buffer, count, size + 1 - count);
+                                if (buffer[0] != 'c') {
+                                    error = true;
+                                    break;
+                                }
+                                if (System.currentTimeMillis() - t0 > SIO_READ_TIMEOUT) {
+                                    logger.w("read timeout (2)");
+                                    error = true;
+                                    break;
+                                }
+                            }
+                            if (error) {
+                                break;
+                            }
+
+                            NetChannel chan;
+                            if (!(chan = netChannels[ddevic - DEVICE_NETCHAN_LO]).status().equals("closed")) {
+                                chan.close();
+                            }
+                            if ((buffer[1] & 0x80) != 0) {
+                                chan = new TCPNetChannel();
+                            } else {
+                                chan = new UDPNetChannel();
+                            }
+                            int port = ((int) buffer[2] & 0xff) | (((int) buffer[3] & 0xff) << 8);
+                            int len;
+                            for (len = 0; buffer[4+len] != 0; len++);
+                            String host = new String(buffer, 4, len);
+                            netChannels[ddevic - DEVICE_NETCHAN_LO] = chan;
+                            if (chan.open(host, port)) {
+                                buffer[0] = 'C';
+                            } else {
+                                buffer[0] = 'E';
+                            }
+                            write(buffer, 0, 1);
+                        } else {
+                            buffer[0] = 'e';
+                            write(buffer, 0, 1);
+                        }
+                        break;
+
+                    case CMD_NETCHAN_WRITE:
+                        if (ddevic >= DEVICE_NETCHAN_LO && ddevic <= DEVICE_NETCHAN_HI) {
+                            int size = daux1;
+
+                            buffer[0] = 'c';
+                            buffer[1] = (byte) size;
+                            buffer[2] = 0;
+                            write(buffer, 0, 3);
+
+                            int count = 0;
+                            boolean error = false;
+                            t0 = System.currentTimeMillis();
+                            while (count < size + 1) {
+                                count += slipRead(buffer, count, size + 1 - count);
+                                if (buffer[0] != 'c') {
+                                    error = true;
+                                    break;
+                                }
+                                if (System.currentTimeMillis() - t0 > SIO_READ_TIMEOUT) {
+                                    logger.w("read timeout (3)");
+                                    error = true;
+                                    break;
+                                }
+                            }
+                            if (error) {
+                                break;
+                            }
+
+                            int k = ((buffer[2] & 0xff) << 8) + (buffer[1] & 0xff);
+                            logger.d("writing " + k + ":\n" + hexDump(buffer, ((k + 3 + 16) & 0xfff0)) + "\n");
+                            int written = netChannels[ddevic - DEVICE_NETCHAN_LO].write(buffer, 3, k);
+                            logger.d("wrote " + written);
+                            if (written == k) {
+                                buffer[0] = 'C';
+                            } else {
                                 buffer[0] = 'E';
                             }
                             write(buffer, 0, 1);
@@ -372,5 +538,46 @@ public class SIO implements Runnable {
         }
 
         logger.d("I/O thread finish");
+    }
+
+    private String hexDump(byte[] a, int size) {
+        StringBuilder b = new StringBuilder();
+        int i;
+        int c;
+        int limit = Math.min(a.length, size);
+        for (int offset = 0; offset < limit; offset += 16) {
+            b.append(String.format("%04x  ", offset));
+            for (i = 0; i < 16; i++) {
+                if (offset + i < limit) {
+                    b.append(String.format("%02x ", 0xff & a[offset + i]));
+                } else {
+                    b.append("   ");
+                }
+                if (i == 3 || i == 11) {
+                    b.append(" ");
+                } else if (i == 7) {
+                    if (offset + i < limit) {
+                        b.append("- ");
+                    } else {
+                        b.append("  ");
+                    }
+                }
+            }
+            b.append("  ");
+            for (i = 0; i < 16; i++) {
+                if (offset + i < limit) {
+                    c = a[offset + i];
+                    if (c >= 0x20 && c <= 0x7f) {
+                        b.append((char) c);
+                    } else {
+                        b.append('.');
+                    }
+                } else {
+                    b.append(' ');
+                }
+            }
+            b.append('\n');
+        }
+        return b.toString();
     }
 }

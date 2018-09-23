@@ -44,6 +44,11 @@
 #define CMD_READ_SECTOR			0x52
 #define CMD_READ_STATUS			0x53
 #define CMD_WRITE_SECTOR		0x57
+#define CMD_NETCHAN_OPEN		0xf3
+#define CMD_NETCHAN_CLOSE		0xf4
+#define CMD_NETCHAN_STATUS		0xf5
+#define CMD_NETCHAN_READ		0xf6
+#define CMD_NETCHAN_WRITE		0xf7
 #define CMD_GET_CHUNK			0xf8
 #define CMD_GET_NEXT_CHUNK		0xf9
 #define CMD_TICK			0xfc
@@ -498,6 +503,8 @@ int main()
 			case FORWARD_COMMAND:
 				if (dcmnd == CMD_READ_STATUS || dcmnd == CMD_READ_SECTOR
 						|| dcmnd == CMD_WRITE_SECTOR || dcmnd == CMD_PUT_SECTOR
+						|| dcmnd == CMD_NETCHAN_OPEN || dcmnd == CMD_NETCHAN_CLOSE || dcmnd == CMD_NETCHAN_STATUS
+						|| dcmnd == CMD_NETCHAN_READ || dcmnd == CMD_NETCHAN_WRITE
 						|| dcmnd == CMD_GET_CHUNK || dcmnd == CMD_GET_NEXT_CHUNK
 						|| dcmnd == CMD_SEND_HIGH_SPEED_INDEX) {
 					if ((disks_statuses & (1 << (ddevic - 0x31))) || (ddevic >= SPECIAL_DEVICE_LOW && ddevic <= SPECIAL_DEVICE_HIGH)) {
@@ -548,7 +555,8 @@ int main()
 				if (rx_i > 1) {
 					response_length = buffer[0] | (buffer[1] << 8);
 					counter2 = 10000;
-					if (dcmnd == CMD_WRITE_SECTOR || dcmnd == CMD_PUT_SECTOR) {
+					if (dcmnd == CMD_WRITE_SECTOR || dcmnd == CMD_PUT_SECTOR
+							|| dcmnd == CMD_NETCHAN_OPEN || dcmnd == CMD_NETCHAN_WRITE) {
 						set_state(&state, RECEIVE_WRITE_RESPONSE, 1);
 					} else if (dcmnd == CMD_TICK) {
 						set_state(&state, RECEIVE_TICK_RESPONSE, 2);

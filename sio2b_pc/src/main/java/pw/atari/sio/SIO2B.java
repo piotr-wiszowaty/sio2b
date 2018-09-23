@@ -404,7 +404,7 @@ public class SIO2B implements ActionListener, IO, GUIManager, Logger {
     }
 
     private void log(String level, String message) {
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,SSS");
         System.out.println(fmt.format(new Date()) + "|" + level + "|" + message);
     }
 

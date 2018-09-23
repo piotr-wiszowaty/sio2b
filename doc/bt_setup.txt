@@ -1,0 +1,19 @@
+# hciconfig hci0 up
+
+[bluetooth]# scan on
+[bluetooth]# scan off
+[bluetooth]# agent on
+[bluetooth]# pair 98:D3:31:30:0D:C5
+Attempting to pair with 98:D3:31:30:0D:C5
+[CHG] Device 98:D3:31:30:0D:C5 Connected: yes
+Request PIN code
+[agent] Enter PIN code: 6502
+[CHG] Device 98:D3:31:30:0D:C5 UUIDs:
+	00001101-0000-1000-8000-00805f9b34fb
+[CHG] Device 98:D3:31:30:0D:C5 Paired: yes
+Pairing successful
+
+----------
+
+# rfcomm bind /dev/rfcomm0 98:D3:31:30:0D:C5
+$ sio2j 0 [...]

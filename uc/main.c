@@ -1,6 +1,6 @@
 #include <stm32f030x8.h>
 
-#define SPI_DEBUG		0
+#define SPI_DEBUG		1
 #define STOP_BIT_DEBUG		0
 
 #define XTAL_FREQ		8000000

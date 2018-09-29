@@ -9,6 +9,7 @@ start equ $2000
 
 [text-section] text
 
+$0041 constant iosnden
 $022F constant sdmctl
 $0230 constant dladr
 $0300 constant ddevic
@@ -185,6 +186,9 @@ a2i_lut
 
 : main
   0 negative !
+
+  \ turn off audio for serial I/O
+  $0 iosnden c!
 
   $00 sdmctl c!
   dlist dladr !

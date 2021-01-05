@@ -321,6 +321,12 @@ public class MainActivity
     }
 
     @Override
+    public void w(String message) { Log.w(tag(), message); }
+
+    @Override
+    public void w(String message, Exception exception) { Log.w(tag(), message, exception); }
+
+    @Override
     public void d(String message) {
         if (debugEnabled) {
             Log.d(tag(), message);

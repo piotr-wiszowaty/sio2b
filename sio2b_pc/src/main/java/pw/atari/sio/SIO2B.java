@@ -138,29 +138,12 @@ public class SIO2B implements ActionListener, IO, GUIManager, Logger {
     private void createDiskControls(Container pane, int index, int y) {
         GridBagConstraints c = new GridBagConstraints();
 
+	JButton b;
+
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridx = 0;
-        c.gridy = y;
         c.insets = new Insets(4, 0, 4, 4);
-        c.weightx = 0.0;
-        JButton b = new JButton("D" + (index + 1) + ":");
-        b.setActionCommand("disk-" + index);
-        b.addActionListener(this);
-        pane.add(b, c);
-        diskButtons[index] = b;
-
-        c.gridx = 1;
-        c.insets = new Insets(0, 0, 0, 0);
-        c.weightx = 1.0;
-        JTextField tf = new JTextField(EMPTY_DISK_TEXT);
-        tf.setEditable(false);
-        pane.add(tf, c);
-        diskLabels[index] = tf;
-
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 2;
-        c.insets = new Insets(4, 0, 4, 4);
-        c.weightx = 0.0;
+        c.weightx = 0.1;
         b = new JButton("Reload");
         b.setActionCommand("reload-" + index);
         b.addActionListener(this);
@@ -168,14 +151,33 @@ public class SIO2B implements ActionListener, IO, GUIManager, Logger {
         reloadButtons[index] = b;
 
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridx = 3;
+        c.gridx = 1;
         c.insets = new Insets(4, 0, 4, 4);
-        c.weightx = 0.0;
+        c.weightx = 0.1;
         b = new JButton("Eject");
         b.setActionCommand("eject-" + index);
         b.addActionListener(this);
         pane.add(b, c);
         ejectButtons[index] = b;
+
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 2;
+        c.gridy = y;
+        c.insets = new Insets(4, 0, 4, 4);
+        c.weightx = 0.1;
+        b = new JButton("D" + (index + 1) + ":");
+        b.setActionCommand("disk-" + index);
+        b.addActionListener(this);
+        pane.add(b, c);
+        diskButtons[index] = b;
+
+        c.gridx = 3;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.weightx = 0.7;
+        JTextField tf = new JTextField(EMPTY_DISK_TEXT);
+        tf.setEditable(false);
+        pane.add(tf, c);
+        diskLabels[index] = tf;
     }
 
     private void createAndShowGUI() {

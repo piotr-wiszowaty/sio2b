@@ -16,4 +16,7 @@ Pairing successful
 ----------
 
 # rfcomm bind /dev/rfcomm0 98:D3:31:30:0D:C5
+or
+# rfcomm -r connect /dev/rfcomm0 98:D3:31:30:0D:C5
+
 $ sio2j 0 [...]

@@ -113,6 +113,8 @@ public class ATR extends DiskImage {
             lastReadSector = sectorNumber;
             SectorCoordinates sc = sectorCoordinates(sectorNumber);
             return Arrays.copyOfRange(image, sc.offset, sc.offset + sc.size);
+        } else if (sectorNumber >= 0x0800) {
+            return new byte[128];
         } else {
             throw new SectorNotFoundException("sector not found: " + sectorNumber);
         }

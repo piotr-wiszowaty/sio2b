@@ -37,4 +37,8 @@ public class DebugDiskImage extends DiskImage {
         }
         System.out.println(String.format("%02X : %s", sectorNumber, sb.toString()));
     }
+
+    public void format() throws IOException {
+        throw new IOException("formatting not supported");
+    }
 }

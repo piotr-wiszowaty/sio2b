@@ -132,6 +132,14 @@ public class ATR extends DiskImage {
         }
     }
 
+    @Override
+    public void format() throws IOException {
+        for (int i = HEADER_SIZE; i < image.length; i++) {
+            image[i] = 0;
+        }
+        update(HEADER_SIZE, image.length - HEADER_SIZE);
+    }
+
     public int getReadProgress() {
         return 100 * lastReadSector / totalSectors;
     }

@@ -36,6 +36,8 @@
 
 #define TICK_INTERVAL		7000
 
+#define CMD_FORMAT_DISK			0x21
+#define CMD_FORMAT_MEDIUM		0x22
 #define CMD_GET_HIGH_SPEED_INDEX	0x3f
 #define CMD_HAPPY_CONFIG		0x48
 #define CMD_PUT_SECTOR			0x50
@@ -496,6 +498,7 @@ int main()
 			case FORWARD_COMMAND:
 				if (dcmnd == CMD_READ_STATUS || dcmnd == CMD_READ_SECTOR
 						|| dcmnd == CMD_WRITE_SECTOR || dcmnd == CMD_PUT_SECTOR
+						|| dcmnd == CMD_FORMAT_DISK || dcmnd == CMD_FORMAT_MEDIUM
 						|| dcmnd == CMD_GET_CHUNK || dcmnd == CMD_GET_NEXT_CHUNK
 						|| dcmnd == CMD_GET_HIGH_SPEED_INDEX || dcmnd == CMD_HAPPY_CONFIG) {
 					if (disks_statuses & (1 << (ddevic - 0x31))) {
@@ -546,7 +549,7 @@ int main()
 				if (rx_i > 1) {
 					response_length = buffer[0] | (buffer[1] << 8);
 					counter2 = 10000;
-					if (dcmnd == CMD_WRITE_SECTOR || dcmnd == CMD_PUT_SECTOR)
+					if (dcmnd == CMD_WRITE_SECTOR || dcmnd == CMD_PUT_SECTOR) {
 						set_state(&state, RECEIVE_WRITE_RESPONSE, 1);
 					} else if (dcmnd == CMD_TICK) {
 						set_state(&state, RECEIVE_TICK_RESPONSE, 2);

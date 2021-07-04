@@ -255,6 +255,11 @@ public class XEX extends DiskImage {
         throw new IOException("write not supported");
     }
 
+    @Override
+    public void format() throws IOException {
+        throw new IOException("formatting not supported");
+    }
+
     private int min(int a, int b) {
         return a <= b ? a : b;
     }

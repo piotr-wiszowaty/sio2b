@@ -14,6 +14,7 @@ public abstract class DiskImage {
     public abstract byte[] getSector(int sectorNumber) throws SectorNotFoundException;
     public abstract void putSector(int sectorNumber, byte[] data, int offset) throws SectorNotFoundException, IOException;
     public abstract int getReadProgress();
+    public abstract void format() throws IOException;
 
     public DiskImage(String path) throws Exception {
         this.path = path;
@@ -31,7 +32,8 @@ public abstract class DiskImage {
         file.seek(offset);
         file.write(image, offset, size);
     }
-    
+
+   
     public String getPath() {
         return path;
     }

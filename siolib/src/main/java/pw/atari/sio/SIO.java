@@ -10,6 +10,8 @@ public class SIO implements Runnable {
 
     private static final int DEVICE_TIME = 0x64;
 
+    private static final int CMD_FORMAT_DISK = 0x21;
+    private static final int CMD_FORMAT_MEDIUM = 0x22;
     private static final int CMD_SEND_HIGH_SPEED_INDEX = 0x3f;
     private static final int CMD_HAPPY_CONFIG = 0x48;
     private static final int CMD_PUT_SECTOR = 0x50;
@@ -265,6 +267,36 @@ public class SIO implements Runnable {
                             write(buffer, 0, i+1);
                         } else {
                             sendErrorResponse();
+                        }
+                        break;
+
+                    case CMD_FORMAT_DISK:
+                        if (ddevic >= 0x31 && ddevic < 0x31+diskImages.length && (di = diskImages[ddevic - 0x31]) != null) {
+                            try {
+                                di.format();
+                                byte[] sector = new byte[di.getSectorSize()];
+                                sector[0] = -1;
+                                sector[1] = -1;
+                                sendData(sector);
+                            } catch (Exception e) {
+                                logger.e(e.getMessage(), e);
+                                sendErrorResponse();
+                            }
+                        }
+                        break;
+
+                    case CMD_FORMAT_MEDIUM:
+                        if (ddevic >= 0x31 && ddevic < 0x31+diskImages.length && (di = diskImages[ddevic - 0x31]) != null) {
+                            try {
+                                di.format();
+                                byte[] sector = new byte[128];
+                                sector[0] = -1;
+                                sector[1] = -1;
+                                sendData(sector);
+                            } catch (Exception e) {
+                                logger.e(e.getMessage(), e);
+                                sendErrorResponse();
+                            }
                         }
                         break;
 

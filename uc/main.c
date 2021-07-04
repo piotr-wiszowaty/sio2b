@@ -52,7 +52,7 @@
 #define min(a, b)			 ((a) < (b) ? (a) : (b))
 
 #define BT_UART_TX_STR(str)		bt_uart_tx((uint8_t *) str, sizeof(str) - 1)
-#define STRNCMP(buf, str)		strncmp(buf, (uint8_t *) str, sizeof(str) - 1)
+#define STRNCMP(buf, str)		_strncmp(buf, (uint8_t *) str, sizeof(str) - 1)
 #define HC05_EXIT_SETUP	\
 	GPIOA->BSRR = 0x10000 << KEY_PIN; \
 	USART2->BRR = PCLK / BAUD_BT
@@ -305,7 +305,7 @@ void bt_set_state(BTSetupState *state, BTSetupState new_state, int code)
 	*state = new_state;
 }
 
-int strncmp(uint8_t *str1, uint8_t *str2, int length)
+int _strncmp(uint8_t *str1, uint8_t *str2, int length)
 {
 	while (length--) {
 		if (*str1 < *str2) {

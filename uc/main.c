@@ -36,7 +36,8 @@
 
 #define TICK_INTERVAL		7000
 
-#define CMD_SEND_HIGH_SPEED_INDEX	0x3f
+#define CMD_GET_HIGH_SPEED_INDEX	0x3f
+#define CMD_HAPPY_CONFIG		0x48
 #define CMD_PUT_SECTOR			0x50
 #define CMD_READ_SECTOR			0x52
 #define CMD_READ_STATUS			0x53
@@ -496,6 +497,7 @@ int main()
 				if (dcmnd == CMD_READ_STATUS || dcmnd == CMD_READ_SECTOR
 						|| dcmnd == CMD_WRITE_SECTOR || dcmnd == CMD_PUT_SECTOR
 						|| dcmnd == CMD_GET_CHUNK || dcmnd == CMD_GET_NEXT_CHUNK
+						|| dcmnd == CMD_GET_HIGH_SPEED_INDEX || dcmnd == CMD_HAPPY_CONFIG) {
 					if (disks_statuses & (1 << (ddevic - 0x31))) {
 						length = encode_slip(buffer, 4, sizeof(buffer));
 						buffer[sizeof(buffer) - 1 - length] = END;
@@ -611,7 +613,7 @@ int main()
 				if ((c = bt_uart_rx()) != -1) {
 					sio_uart_tx(c);
 					if (--response_length == 0) {
-						if (dcmnd == CMD_SEND_HIGH_SPEED_INDEX) {
+						if (dcmnd == CMD_GET_HIGH_SPEED_INDEX) {
 							while (!(USART1->ISR & USART_ISR_TC));
 							USART1->BRR = next_ubrr;
 							high_speed_index = next_high_speed_index;

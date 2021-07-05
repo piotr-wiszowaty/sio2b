@@ -17,13 +17,13 @@ import java.util.Arrays;
  * 16 bytes long.
  *
  * Type     Name         Description
- * WORD     wMagic         $0296 (sum of 'NICKATARI')
- * WORD     wPars         size of this disk image, in paragraphs (size/$10)
+ * WORD     wMagic       $0296 (sum of 'NICKATARI')
+ * WORD     wPars        size of this disk image, in paragraphs (size/$10)
  * WORD     wSecSize     sector size. ($80 or $100) bytes/sector
- * BYTE     btParsHigh     high part of size, in paragraphs (added by REV 3.00)
- * DWORD     dwCRC         32bit CRC of file (added by APE?)
- * DWORD     dwUnused     unused
- * BYTE     btFlags     bit 0 (ReadOnly) (added by APE?)
+ * BYTE     btParsHigh   high part of size, in paragraphs (added by REV 3.00)
+ * DWORD    dwCRC        32bit CRC of file (added by APE?)
+ * DWORD    dwUnused     unused
+ * BYTE     btFlags      bit 0 (ReadOnly) (added by APE?)
  *
  * Body
  * ----

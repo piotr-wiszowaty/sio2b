@@ -13,6 +13,13 @@ Features
 * emulate up to 4 disk drives (`D1`..`D4`)
 * handle high speeds (up to HS\_index=1)
 
+Hardware
+--------
+
+Microcontroller: STM32F051
+Bluetooth module: HC-05/HC-06
+Enclosure: Z24A (half-transparent) by [Kradex](https://www.kradex.com.pl).
+
 References
 ----------
 

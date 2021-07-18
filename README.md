@@ -16,7 +16,7 @@ Features
 Hardware
 --------
 
-Microcontroller: STM32F051
+Microcontroller: STM32F030C8T6
 Bluetooth module: HC-05/HC-06
 Enclosure: Z24A (half-transparent) by [Kradex](https://www.kradex.com.pl).
 

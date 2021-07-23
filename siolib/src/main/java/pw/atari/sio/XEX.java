@@ -246,6 +246,14 @@ public class XEX extends DiskImage {
         return SECTOR_SIZE;
     }
 
+    public int getTotalTracks() {
+        return 0;
+    }
+
+    public int getSectorsPerTrack() {
+        return 0;
+    }
+
     private byte[] selectBootloader() {
         return highSpeed && image.length > 8192 ? bootloaderHighSpeed : bootloaderNormalSpeed;
     }

@@ -27,6 +27,8 @@ public abstract class DiskImage {
     public abstract boolean isWriteProtected();
     public abstract int getSectorSize();
     public abstract int getSectorSize(int sectorNumber);
+    public abstract int getTotalTracks();
+    public abstract int getSectorsPerTrack();
     public abstract byte[] getSector(int sectorNumber) throws SectorNotFoundException;
     public abstract void putSector(int sectorNumber, byte[] data, int offset) throws SectorNotFoundException, IOException;
     public abstract int getReadProgress();

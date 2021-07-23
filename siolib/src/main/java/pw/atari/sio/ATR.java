@@ -60,6 +60,8 @@ public class ATR extends DiskImage {
     private boolean writeProtected;
     private int totalSectors;
     private int lastReadSector;
+    private int totalTracks;
+    private int sectorsPerTrack;
 
     public ATR(String path) throws Exception {
         super(path);
@@ -74,7 +76,9 @@ public class ATR extends DiskImage {
         totalParagraphs = (header[2] & 0xff) | ((header[3] & 0xff) << 8) | ((header[6] & 0xff) << 16);
         sectorSize = (header[4] & 0xff) | ((header[5] & 0xff) << 8);
         writeProtected = (header[15] & 1) == 1;
-        if (sectorSize == 128 || sectorSize == 512) {
+        if (sectorSize == 128) {
+            totalSectors = 16*totalParagraphs / sectorSize;
+        } else if (sectorSize == 512) {
             totalSectors = 16*totalParagraphs / sectorSize;
         } else if (sectorSize == 256) {
             if ((totalParagraphs & 0x0f) == 0x00) {
@@ -83,6 +87,12 @@ public class ATR extends DiskImage {
                 totalSectors = 16*(totalParagraphs + 24) / sectorSize;
             }
         }
+        if (totalSectors % 80 == 0) {
+            totalTracks = 80;
+        } else {
+            totalTracks = 40;
+        }
+        sectorsPerTrack = totalSectors / totalTracks;
     }
 
     private SectorCoordinates sectorCoordinates(int sectorNumber) {
@@ -122,6 +132,14 @@ public class ATR extends DiskImage {
 
     public int getSectorSize(int sectorNumber) {
         return sectorCoordinates(sectorNumber).size;
+    }
+
+    public int getTotalTracks() {
+        return totalTracks;
+    }
+
+    public int getSectorsPerTrack() {
+        return sectorsPerTrack;
     }
 
     public byte[] getSector(int sectorNumber) throws SectorNotFoundException {

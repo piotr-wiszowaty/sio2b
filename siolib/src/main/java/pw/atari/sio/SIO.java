@@ -276,18 +276,18 @@ public class SIO implements Runnable {
                     case CMD_READ_PERCOM:
                         if (ddevic >= 0x31 && ddevic < 0x31+diskImages.length && (di = diskImages[ddevic - 0x31]) != null) {
                             buffer[i = 0] = 'C';
-                            buffer[++i] = (byte) 40;       // [0] # of tracks
-                            buffer[++i] = (byte) 3;        // [1] head movement speed (6 ms)
-                            buffer[++i] = (byte) 0;        // [2] # sectors/track high byte
-                            buffer[++i] = (byte) 18;       // [3] # sectors/track low byte
-                            buffer[++i] = (byte) 0;        // [4] # active sides - 1
-                            buffer[++i] = (byte) 0x00;     // [5] bit1=1: 8" (=0: 5.25"), bit2=1: MFM (=0: FM), bit3=1: sideless disk
-                            buffer[++i] = (byte) ((di.getSectorSize() >> 8) & 0xff);  // [6] sector size high byte
-                            buffer[++i] = (byte) (di.getSectorSize() & 0xff);         // [7] sector size low byte
-                            buffer[++i] = (byte) 0xff;     // [8] unused, $FF
-                            buffer[++i] = (byte) 0x00;     // [9] unused, $00
-                            buffer[++i] = (byte) 0x00;     // [10] unused, $00
-                            buffer[++i] = (byte) 0x00;     // [11] unused, $00
+                            buffer[++i] = (byte) di.getTotalTracks();                     // [0] # of tracks
+                            buffer[++i] = (byte) 3;                                       // [1] head movement speed (6 ms)
+                            buffer[++i] = (byte) ((di.getSectorsPerTrack() >> 8) & 0xff); // [2] # sectors/track high byte
+                            buffer[++i] = (byte) (di.getSectorsPerTrack() & 0xff);        // [3] # sectors/track low byte
+                            buffer[++i] = (byte) 0;                                       // [4] # active sides - 1
+                            buffer[++i] = (byte) 0x00;                                    // [5] bit1=1: 8" (=0: 5.25"), bit2=1: MFM (=0: FM), bit3=1: sideless disk
+                            buffer[++i] = (byte) ((di.getSectorSize() >> 8) & 0xff);      // [6] sector size high byte
+                            buffer[++i] = (byte) (di.getSectorSize() & 0xff);             // [7] sector size low byte
+                            buffer[++i] = (byte) 0xff;                                    // [8] unused, $FF
+                            buffer[++i] = (byte) 0x00;                                    // [9] unused, $00
+                            buffer[++i] = (byte) 0x00;                                    // [10] unused, $00
+                            buffer[++i] = (byte) 0x00;                                    // [11] unused, $00
                             buffer[++i] = checksum(buffer, 1, 12);
                             write(buffer, 0, i+1);
                         } else {

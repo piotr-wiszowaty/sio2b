@@ -37,6 +37,14 @@ public class DebugDiskImage extends DiskImage {
         return SECTOR_SIZE;
     }
 
+    public int getTotalTracks() {
+        return 40;
+    }
+
+    public int getSectorsPerTrack() {
+        return 18;
+    }
+
     public byte[] getSector(int sectorNumber) throws SectorNotFoundException {
         throw new SectorNotFoundException("sector not found: " + sectorNumber);
     }
